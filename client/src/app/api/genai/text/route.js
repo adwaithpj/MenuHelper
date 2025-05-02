@@ -7,6 +7,10 @@ const foodItemSchema = z.object({
     imageUrl: z.string().url("Valid image URL is required"),
 });
 
+const messageSchema = z.object({
+    message: z.string().min(1, "Message is required"),
+});
+
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export async function POST(request) {
@@ -29,6 +33,11 @@ export async function POST(request) {
 
         Give a image of the food item(s) in the response.
 
+        If the text is like greetings, example: thanks,thankyou, hello, hi, etc.
+        return a json object with a message key and a value of human like reply.
+
+        If the text goes beyond the concept of food or greetings, then always says something like I am here to help you with your food related queries.This is always important. 
+
         IMPORTANT: Return ONLY the JSON object, without any markdown formatting, code blocks, or additional text.
         Do not include \`\`\`json or any other formatting characters.
 
@@ -43,11 +52,8 @@ export async function POST(request) {
 
         The dish name should be the same as the dish name in the menu items.
         The image URL should be a URL of a food image.
-        
-        The food items are: ${text}. If there is no food item, return:
-        {
-            "message": "No food items found"
-        }`;
+
+        The food items are: ${text}.`;
 
         const response = await ai.models.generateContent({
             model: "gemini-2.0-flash",
@@ -65,7 +71,18 @@ export async function POST(request) {
         try {
             parsedResult = JSON.parse(cleanResponse);
 
-            // Validate the response format
+            // First check if it's a message response (greetings or non-food query)
+            try {
+                const messageResult = messageSchema.parse(parsedResult);
+                return Response.json(
+                    { status: 200, success: true, data: messageResult },
+                    { status: 200 }
+                );
+            } catch (messageError) {
+                // If not a message, continue with food item validation
+            }
+
+            // Validate the response format for food items
             if (Array.isArray(parsedResult)) {
                 // If it's an array, validate each item
                 const validatedItems = parsedResult

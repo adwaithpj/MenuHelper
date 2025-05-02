@@ -26,7 +26,7 @@ export default function Chat({
                         <div
                             className={`max-w-[80%] rounded-lg p-3 transition-all duration-300 transform hover:scale-101 ${
                                 message.type === "user"
-                                    ? "bg-blue-500 text-white"
+                                    ? "bg-gray-500 text-white"
                                     : message.type === "system"
                                     ? "bg-yellow-100 dark:bg-yellow-900 text-black dark:text-white"
                                     : "bg-gray-200 dark:bg-gray-800"

@@ -119,9 +119,15 @@ export default function Home() {
                 stream.getTracks().forEach((track) => track.stop());
                 overlay.remove();
 
-                // Set preview URL
-                setPreviewUrl(imageUrl);
-                toast.success("Image captured!");
+                // Convert canvas to blob and create file
+                canvas.toBlob((blob) => {
+                    const file = new File([blob], "captured-image.jpg", {
+                        type: "image/jpeg",
+                    });
+                    setSelectedFile(file);
+                    setPreviewUrl(imageUrl);
+                    toast.success("Image captured!");
+                }, "image/jpeg");
             };
         } catch (err) {
             console.error("Camera error:", err);
@@ -161,6 +167,7 @@ export default function Home() {
 
             try {
                 const response = await textToFoodItems(inputValue);
+
                 if (!response.success) {
                     setMessages((prev) => [
                         ...prev,
@@ -173,7 +180,20 @@ export default function Home() {
                     return;
                 }
 
-                const menuItems = response.menuItems;
+                // Check if response is a message (greeting or non-food query)
+                if (response.menuItems.message) {
+                    setMessages((prev) => [
+                        ...prev,
+                        {
+                            type: "ai",
+                            content: response.menuItems.message,
+                            timestamp: new Date(),
+                        },
+                    ]);
+                    return;
+                }
+
+                const menuItems = response.menuItems || [];
 
                 if (menuItems.length === 0) {
                     setMessages((prev) => [
@@ -204,12 +224,17 @@ export default function Home() {
             } catch (error) {
                 toast.error("Failed to process message");
                 console.error("Message processing error:", error);
+                console.error("Error details:", {
+                    message: error.message,
+                    stack: error.stack,
+                    response: error.response,
+                });
             } finally {
                 setProcessingImage(false);
                 setSubmitted(false);
             }
         }
-
+        // console.log("previewUrl", previewUrl);
         if (previewUrl) {
             setMessages((prev) => [
                 ...prev,
@@ -222,7 +247,7 @@ export default function Home() {
             ]);
 
             // Process the image with OCR
-            if (selectedFile) {
+            if (selectedFile || previewUrl.startsWith("data:image")) {
                 setProcessingImage(true);
                 try {
                     // Create a new Image object to ensure proper loading
@@ -259,12 +284,6 @@ export default function Home() {
                     }
 
                     setOcrResults({ text: response.data.data });
-
-                    console.log("Menu Items in page.js", response.data.data);
-                    console.log(
-                        "Type of menu items",
-                        typeof response.data.data
-                    );
 
                     // Add OCR result as a system message
                     setMessages((prev) => [
@@ -353,20 +372,21 @@ export default function Home() {
                     return;
                 }
 
-                // Add the food details to the chat
-                setMessages((prev) => [
-                    ...prev,
-                    {
-                        type: "ai",
-                        content: `Here are the details for your menu items:\n\n${menuItems
-                            .map(
-                                (item) =>
-                                    `🍽️ ${item.dishName}\n📝 ${item.description}\n`
-                            )
-                            .join("\n")}`,
-                        timestamp: new Date(),
-                    },
-                ]);
+                if (menuItems.length > 0) {
+                    setMessages((prev) => [
+                        ...prev,
+                        {
+                            type: "ai",
+                            content: `😋🧑‍🍳 Here are the menu items for "${inputValue}":\n\n${menuItems
+                                .map(
+                                    (item) =>
+                                        `🍽️ ${item.dishName}\n\n${item.description}\n`
+                                )
+                                .join("\n")}`,
+                            timestamp: new Date(),
+                        },
+                    ]);
+                }
             } catch (error) {
                 console.error("Error processing menu items:", error);
                 setMessages((prev) => [
