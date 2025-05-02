@@ -12,7 +12,7 @@ export default function Chat({
     messagesEndRef,
 }) {
     return (
-        <div className="flex-1 overflow-y-auto mt-20 p-4 space-y-4 mb-24 pb-32">
+        <div className="flex-1 overflow-y-auto mt-20 p-4 space-y-4 mb-24 pb-32 ">
             {messages.map((message, index) => (
                 <div
                     key={index}

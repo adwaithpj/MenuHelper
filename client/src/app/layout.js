@@ -23,7 +23,9 @@ export default function RootLayout({ children }) {
                         content="width=device-width, initial-scale=1.0"
                     />
                 </head>
-                <body className={`${inter.className} antialiased`}>
+                <body
+                    className={`${inter.className} bg-white dark:bg-black antialiased`}
+                >
                     <GoogleAnalytics gaId="G-317BMNK09K" />
                     <Providers>{children}</Providers>
                 </body>

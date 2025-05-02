@@ -97,7 +97,7 @@ export default function Home() {
                 "absolute top-60 right-5 px-5 py-3 bg-red-500 text-white rounded";
             captureBtn.textContent = "Capture";
             captureBtn.className =
-                "mt-4 px-6 py-2 dark:bg-white dark:text-black text-white rounded ";
+                "mt-4 px-6 py-2 bg-white text-black dark:bg-white dark:text-white  rounded ";
             overlay.appendChild(captureBtn);
             overlay.appendChild(captureCloseBtn);
             document.body.appendChild(overlay);
@@ -377,7 +377,7 @@ export default function Home() {
                         ...prev,
                         {
                             type: "ai",
-                            content: `😋🧑‍🍳 Here are the menu items for "${inputValue}":\n\n${menuItems
+                            content: `😋🧑‍🍳 These items look yummy":\n\n${menuItems
                                 .map(
                                     (item) =>
                                         `🍽️ ${item.dishName}\n\n${item.description}\n`
@@ -409,7 +409,7 @@ export default function Home() {
     }
 
     return (
-        <main className="flex flex-col min-h-screen bg-black dark:bg-black transition-colors duration-200">
+        <main className="flex flex-col min-h-screen  transition-colors duration-200">
             {/* Header */}
             <Header theme={theme} setTheme={setTheme} />
 
