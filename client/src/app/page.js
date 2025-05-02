@@ -17,22 +17,27 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { X, Camera, Send, Upload, Image as ImageIcon } from "lucide-react";
 
 import convertor from "@/utils/ocr";
-import { fixMenuItems } from "@/utils/genAI";
+import { fixMenuItems, textToFoodItems } from "@/utils/genAI";
 
 export default function Home() {
     const [mounted, setMounted] = useState(false);
-    const [inputValue, setInputValue] = useState("");
-    const [selectedFile, setSelectedFile] = useState(null);
-    const [previewUrl, setPreviewUrl] = useState("");
     const [isMobile, setIsMobile] = useState(false);
-    const [messages, setMessages] = useState([]);
     const [chatStarted, setChatStarted] = useState(false);
+
+    const [processingImage, setProcessingImage] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
+
+    const [selectedFile, setSelectedFile] = useState(null);
     const fileInputRef = useRef(null);
     const messagesEndRef = useRef(null);
-    const { theme, setTheme } = useTheme();
-    const [processingImage, setProcessingImage] = useState(false);
+
     const [ocrResults, setOcrResults] = useState(null);
-    const [submitted, setSubmitted] = useState(false);
+
+    const [inputValue, setInputValue] = useState("");
+    const [previewUrl, setPreviewUrl] = useState("");
+
+    const [messages, setMessages] = useState([]);
+    const { theme, setTheme } = useTheme();
 
     useEffect(() => {
         setMounted(true);
@@ -59,13 +64,8 @@ export default function Home() {
 
     const handleCapture = async () => {
         try {
-            if (
-                !navigator.mediaDevices ||
-                !navigator.mediaDevices.getUserMedia
-            ) {
-                toast.error(
-                    "Camera access is not supported in this browser or requires a secure context (HTTPS)"
-                );
+            if (!navigator.mediaDevices?.getUserMedia) {
+                toast.error("Camera not supported or HTTPS required");
                 return;
             }
 
@@ -79,29 +79,53 @@ export default function Home() {
 
             const video = document.createElement("video");
             video.srcObject = stream;
-            video.play();
+            video.setAttribute("autoplay", "");
+            video.setAttribute("playsinline", "");
+            video.style.width = "100%";
+            video.style.maxHeight = "300px";
+            video.classList.add("rounded-lg", "mt-2");
 
-            video.onloadedmetadata = () => {
+            const overlay = document.createElement("div");
+            overlay.className =
+                "fixed inset-0 bg-black/70 z-50 flex items-center justify-center flex-col";
+            overlay.appendChild(video);
+
+            const captureBtn = document.createElement("button");
+            const captureCloseBtn = document.createElement("button");
+            captureCloseBtn.textContent = "x";
+            captureCloseBtn.className =
+                "absolute top-60 right-5 px-5 py-3 bg-red-500 text-white rounded";
+            captureBtn.textContent = "Capture";
+            captureBtn.className =
+                "mt-4 px-6 py-2 dark:bg-white dark:text-black text-white rounded ";
+            overlay.appendChild(captureBtn);
+            overlay.appendChild(captureCloseBtn);
+            document.body.appendChild(overlay);
+
+            captureCloseBtn.onclick = () => {
+                stream.getTracks().forEach((track) => track.stop());
+                overlay.remove();
+            };
+
+            captureBtn.onclick = () => {
                 const canvas = document.createElement("canvas");
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
-                canvas.getContext("2d").drawImage(video, 0, 0);
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 const imageUrl = canvas.toDataURL("image/jpeg");
-                setPreviewUrl(imageUrl);
+
+                // Cleanup
                 stream.getTracks().forEach((track) => track.stop());
-                toast.success("Image captured successfully!");
+                overlay.remove();
+
+                // Set preview URL
+                setPreviewUrl(imageUrl);
+                toast.success("Image captured!");
             };
         } catch (err) {
             console.error("Camera error:", err);
-            if (isMobile) {
-                toast.error(
-                    "Camera access is not available. Please use the file upload option instead."
-                );
-            } else {
-                toast.error(
-                    "Error accessing camera. Please check your browser permissions."
-                );
-            }
+            toast.error("Unable to access camera");
         }
     };
 
@@ -126,12 +150,64 @@ export default function Home() {
         }
 
         if (inputValue) {
+            /**set user message to the conversation */
             setMessages((prev) => [
                 ...prev,
                 { type: "user", content: inputValue, timestamp: new Date() },
             ]);
+
             setInputValue("");
-            setSubmitted(false);
+            setProcessingImage(true);
+
+            try {
+                const response = await textToFoodItems(inputValue);
+                if (!response.success) {
+                    setMessages((prev) => [
+                        ...prev,
+                        {
+                            type: "ai",
+                            content: `I'm sorry 🥺, my developers are lazy and is still working on it why this happened.😪.Wait for some time.`,
+                            timestamp: new Date(),
+                        },
+                    ]);
+                    return;
+                }
+
+                const menuItems = response.menuItems;
+
+                if (menuItems.length === 0) {
+                    setMessages((prev) => [
+                        ...prev,
+                        {
+                            type: "ai",
+                            content: `I'm sorry 🥺, I couldn't find any menu items for "${inputValue}" ❌. Please try again with a different query.🥹`,
+                            timestamp: new Date(),
+                        },
+                    ]);
+                    return;
+                }
+                if (menuItems.length > 0) {
+                    setMessages((prev) => [
+                        ...prev,
+                        {
+                            type: "ai",
+                            content: `😋🧑‍🍳 Here are the menu items for "${inputValue}":\n\n${menuItems
+                                .map(
+                                    (item) =>
+                                        `🍽️ ${item.dishName}\n\n${item.description}\n`
+                                )
+                                .join("\n")}`,
+                            timestamp: new Date(),
+                        },
+                    ]);
+                }
+            } catch (error) {
+                toast.error("Failed to process message");
+                console.error("Message processing error:", error);
+            } finally {
+                setProcessingImage(false);
+                setSubmitted(false);
+            }
         }
 
         if (previewUrl) {
@@ -162,25 +238,44 @@ export default function Home() {
                     // Process the image with OCR
                     const result = await convertor(img);
 
-                    console.log("this is the result of the ocr", result);
-
                     // Format the OCR result
                     const newResult = JSON.stringify({
                         menuItems: result,
                     });
 
-                    console.log("this is the new result", newResult);
-
                     // Process the menu items with genAI
                     const response = await fixMenuItems(newResult);
-                    setOcrResults({ text: response });
+                    if (!response.data.success) {
+                        setMessages((prev) => [
+                            ...prev,
+                            {
+                                type: "ai",
+                                content: `This image doesn't have any dishes 🙅‍♂️. Can you please check again 🥹✨`,
+                                timestamp: new Date(),
+                                requiresConfirmation: false,
+                            },
+                        ]);
+                        return;
+                    }
+
+                    setOcrResults({ text: response.data.data });
+
+                    console.log("Menu Items in page.js", response.data.data);
+                    console.log(
+                        "Type of menu items",
+                        typeof response.data.data
+                    );
 
                     // Add OCR result as a system message
                     setMessages((prev) => [
                         ...prev,
                         {
                             type: "system",
-                            content: `I found the following text in your menu image:\n\n${response}\n\nIs this correct? Don't worry if there is unwanted characters.`,
+                            content: `I found the following items in your menu image:\n\n${response.data.data
+                                .map((item) => `• ${item}`)
+                                .join(
+                                    "\n"
+                                )}\n\nIs this correct? Don't worry if there are any unwanted characters.`,
                             timestamp: new Date(),
                             requiresConfirmation: true,
                         },
@@ -201,7 +296,7 @@ export default function Home() {
         }
     };
 
-    const handleConfirmation = (index, isConfirmed) => {
+    const handleConfirmation = async (index, isConfirmed) => {
         setMessages((prev) => {
             const newMessages = [...prev];
             const message = newMessages[index];
@@ -211,7 +306,7 @@ export default function Home() {
                 newMessages[index] = {
                     ...message,
                     type: "ai",
-                    content: `Based on the menu image, here are the items:\n\n${ocrResults.text}`,
+                    content: `Great! I'll analyze these menu items for you.`,
                     requiresConfirmation: false,
                 };
             } else {
@@ -222,6 +317,71 @@ export default function Home() {
 
             return newMessages;
         });
+
+        if (isConfirmed && ocrResults?.text) {
+            setProcessingImage(true);
+            try {
+                // Convert array to comma-separated string
+                const menuItemsString = ocrResults.text.join(", ");
+
+                // Get food details using textToFoodItems
+                const response = await textToFoodItems(menuItemsString);
+
+                if (!response.success) {
+                    setMessages((prev) => [
+                        ...prev,
+                        {
+                            type: "ai",
+                            content: `I'm sorry 🥺, I couldn't process these menu items. Please try again.`,
+                            timestamp: new Date(),
+                        },
+                    ]);
+                    return;
+                }
+
+                const menuItems = response.menuItems;
+
+                if (menuItems.length === 0) {
+                    setMessages((prev) => [
+                        ...prev,
+                        {
+                            type: "ai",
+                            content: `I'm sorry 🥺, I couldn't find any details for these menu items. Please try again.`,
+                            timestamp: new Date(),
+                        },
+                    ]);
+                    return;
+                }
+
+                // Add the food details to the chat
+                setMessages((prev) => [
+                    ...prev,
+                    {
+                        type: "ai",
+                        content: `Here are the details for your menu items:\n\n${menuItems
+                            .map(
+                                (item) =>
+                                    `🍽️ ${item.dishName}\n📝 ${item.description}\n`
+                            )
+                            .join("\n")}`,
+                        timestamp: new Date(),
+                    },
+                ]);
+            } catch (error) {
+                console.error("Error processing menu items:", error);
+                setMessages((prev) => [
+                    ...prev,
+                    {
+                        type: "ai",
+                        content: `I'm sorry 🥺, something went wrong while processing the menu items. Please try again.`,
+                        timestamp: new Date(),
+                    },
+                ]);
+            } finally {
+                setProcessingImage(false);
+                setOcrResults(null);
+            }
+        }
     };
 
     if (!mounted) {
@@ -241,6 +401,7 @@ export default function Home() {
                 setMessages={setMessages}
                 messagesEndRef={messagesEndRef}
                 handleConfirmation={handleConfirmation}
+                processingImage={processingImage}
             />
 
             {/* Input Area */}

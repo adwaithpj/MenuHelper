@@ -2,8 +2,14 @@ import React, { useRef } from "react";
 
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
+import TypingAnimation from "./TypingAnimation";
 
-export default function Chat({ messages, setMessages, handleConfirmation }) {
+export default function Chat({
+    messages,
+    setMessages,
+    handleConfirmation,
+    processingImage,
+}) {
     const messagesEndRef = useRef(null);
     return (
         <div>
@@ -85,6 +91,13 @@ export default function Chat({ messages, setMessages, handleConfirmation }) {
                         </div>
                     </div>
                 ))}
+                {processingImage && (
+                    <div className="flex justify-start animate-message-in">
+                        <div className="max-w-[80%] rounded-lg p-3 bg-gray-200 dark:bg-gray-800">
+                            <TypingAnimation />
+                        </div>
+                    </div>
+                )}
                 <div ref={messagesEndRef} />
             </div>
         </div>

@@ -15,6 +15,8 @@ export default function InputArea({
     fileInputRef,
     inputValue,
     setInputValue,
+    cameraInputRef,
+    handleCameraCapture,
     setPreviewUrl,
     setSelectedFile,
     setSubmitted,
@@ -24,7 +26,7 @@ export default function InputArea({
         <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-black border-t dark:border-gray-800 p-4 transition-all duration-300">
             <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Image Preview */}
-                {previewUrl && !submitted ? (
+                {previewUrl && !submitted && (
                     <div className="relative w-[200px] h-[150px] mx-auto animate-fade-in">
                         <img
                             src={previewUrl}
@@ -39,17 +41,27 @@ export default function InputArea({
                             <X className="h-5 w-5" />
                         </Button>
                     </div>
-                ) : null}
+                )}
+
+                {/* Hidden Inputs */}
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    className="hidden"
+                    accept="image/*"
+                />
+                <input
+                    type="file"
+                    ref={cameraInputRef}
+                    onChange={handleCameraCapture}
+                    className="hidden"
+                    accept="image/*"
+                    capture="environment"
+                />
 
                 {/* Input and Buttons */}
                 <div className="flex gap-2">
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleFileChange}
-                        className="hidden"
-                        accept="image/*"
-                    />
                     <Button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
@@ -75,7 +87,7 @@ export default function InputArea({
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                         placeholder="Type your message..."
-                        className="flex-1 h-12 transition-all duration-300 focus:scale-[1.02]"
+                        className="flex-1 h-12 transition-all duration-300 focus:scale-[1.001]"
                         disabled={processingImage}
                     />
                     <Button
