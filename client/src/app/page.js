@@ -211,7 +211,7 @@ export default function Home() {
                         ...prev,
                         {
                             type: "ai",
-                            content: `😋🧑‍🍳 Here are the menu items for "${inputValue}":\n\n${menuItems
+                            content: `😋🧑‍🍳 Yummy, here are the details of the dishes you asked for:\n\n${menuItems
                                 .map(
                                     (item) =>
                                         `🍽️ ${item.dishName}\n\n${item.description}\n`
