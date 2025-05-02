@@ -412,35 +412,39 @@ export default function Home() {
         <main className="flex flex-col h-screen dark:bg-black transition-colors duration-200">
             {/* Header */}
             <Header theme={theme} setTheme={setTheme} />
-            {/* Welcome Content */}
-            <WelcomeText chatStarted={chatStarted} />
 
-            {/* Chat Messages */}
-            <Chat
-                messages={messages}
-                setMessages={setMessages}
-                messagesEndRef={messagesEndRef}
-                handleConfirmation={handleConfirmation}
-                processingImage={processingImage}
-            />
+            {/* Main Content */}
+            <div className="flex-1 flex flex-col pt-16 max-w-7xl mx-auto w-full ">
+                {/* Welcome Content */}
+                <WelcomeText chatStarted={chatStarted} />
 
-            {/* Input Area */}
-            <InputArea
-                handleSubmit={handleSubmit}
-                handleFileChange={handleFileChange}
-                handleCapture={handleCapture}
-                handleDeleteImage={handleDeleteImage}
-                previewUrl={previewUrl}
-                processingImage={processingImage}
-                submitted={submitted}
-                fileInputRef={fileInputRef}
-                inputValue={inputValue}
-                setInputValue={setInputValue}
-                setPreviewUrl={setPreviewUrl}
-                setSelectedFile={setSelectedFile}
-                setSubmitted={setSubmitted}
-                setProcessingImage={setProcessingImage}
-            />
+                {/* Chat Messages */}
+                <Chat
+                    messages={messages}
+                    setMessages={setMessages}
+                    messagesEndRef={messagesEndRef}
+                    handleConfirmation={handleConfirmation}
+                    processingImage={processingImage}
+                />
+
+                {/* Input Area */}
+                <InputArea
+                    handleSubmit={handleSubmit}
+                    handleFileChange={handleFileChange}
+                    handleCapture={handleCapture}
+                    handleDeleteImage={handleDeleteImage}
+                    previewUrl={previewUrl}
+                    processingImage={processingImage}
+                    submitted={submitted}
+                    fileInputRef={fileInputRef}
+                    inputValue={inputValue}
+                    setInputValue={setInputValue}
+                    setPreviewUrl={setPreviewUrl}
+                    setSelectedFile={setSelectedFile}
+                    setSubmitted={setSubmitted}
+                    setProcessingImage={setProcessingImage}
+                />
+            </div>
         </main>
     );
 }

@@ -14,7 +14,7 @@ import { Github, Linkedin, Twitter, Instagram } from "lucide-react";
 
 export default function Header({ theme, setTheme }) {
     return (
-        <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b dark:border-gray-800">
+        <header className="fixed top-0 left-0 right-0 z-50  bg-white dark:bg-black border-b dark:border-gray-900">
             <div className="flex items-center justify-between p-4 max-w-7xl mx-auto">
                 <div className="flex items-center gap-2">
                     <h1 className="text-xl font-bold">Menu Helper</h1>
