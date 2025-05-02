@@ -1,6 +1,7 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -14,16 +15,19 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
     return (
-        <html lang="en" suppressHydrationWarning>
-            <head>
-                <meta
-                    name="viewport"
-                    content="width=device-width, initial-scale=1.0"
-                />
-            </head>
-            <body className={`${inter.className} antialiased`}>
-                <Providers>{children}</Providers>
-            </body>
-        </html>
+        <>
+            <html lang="en" suppressHydrationWarning>
+                <head>
+                    <meta
+                        name="viewport"
+                        content="width=device-width, initial-scale=1.0"
+                    />
+                </head>
+                <body className={`${inter.className} antialiased`}>
+                    <GoogleAnalytics gaId="G-317BMNK09K" />
+                    <Providers>{children}</Providers>
+                </body>
+            </html>
+        </>
     );
 }

@@ -23,7 +23,7 @@ export default function InputArea({
     setProcessingImage,
 }) {
     return (
-        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-black border-t dark:border-gray-900 p-4 transition-all duration-300  ">
+        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-black border-t dark:border-gray-800 p-4 transition-all duration-300  ">
             <form
                 onSubmit={handleSubmit}
                 className="space-y-4 max-w-7xl mx-auto"

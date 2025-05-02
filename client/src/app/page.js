@@ -409,7 +409,7 @@ export default function Home() {
     }
 
     return (
-        <main className="flex flex-col h-screen dark:bg-black transition-colors duration-200">
+        <main className="flex flex-col min-h-screen bg-black dark:bg-black transition-colors duration-200">
             {/* Header */}
             <Header theme={theme} setTheme={setTheme} />
 
