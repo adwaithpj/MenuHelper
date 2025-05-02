@@ -97,7 +97,7 @@ export default function Home() {
                 "absolute top-60 right-5 px-5 py-3 bg-red-500 text-white rounded";
             captureBtn.textContent = "Capture";
             captureBtn.className =
-                "mt-4 px-6 py-2 bg-white text-black dark:bg-white dark:text-white  rounded ";
+                "mt-4 px-6 py-2 bg-white text-black   rounded ";
             overlay.appendChild(captureBtn);
             overlay.appendChild(captureCloseBtn);
             document.body.appendChild(overlay);
