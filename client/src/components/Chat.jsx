@@ -21,6 +21,8 @@ export default function Chat({
     const [currentSlide, setCurrentSlide] = useState(0);
     const carouselRef = useRef(null);
     const scrollTimeout = useRef(null);
+    const [showImageModal, setShowImageModal] = useState(false);
+    const [selectedDish, setSelectedDish] = useState(null);
 
     const scrollToSlide = (index) => {
         if (carouselRef.current) {
@@ -91,7 +93,12 @@ export default function Chat({
                     currentDish = {
                         title: line.replace("🍽️", "").trim(),
                         description: "",
+                        imageUrl: "",
                     };
+                } else if (line.startsWith("📸")) {
+                    if (currentDish) {
+                        currentDish.imageUrl = line.replace("📸", "").trim();
+                    }
                 } else if (
                     currentDish &&
                     line.trim() &&
@@ -173,7 +180,7 @@ export default function Chat({
                                     scrollToSlide(newIndex);
                                 };
 
-                                if (dishes.length <= 1) {
+                                if (dishes.length === 0) {
                                     return (
                                         <p className="whitespace-pre-wrap">
                                             {message.content}
@@ -186,7 +193,11 @@ export default function Chat({
                                         {/* Horizontal scrollable carousel */}
                                         <div
                                             ref={carouselRef}
-                                            className="overflow-x-auto flex gap-4 scroll-smooth snap-x snap-mandatory scrollbar-hide"
+                                            className={`overflow-x-auto flex gap-4 scroll-smooth snap-x snap-mandatory scrollbar-hide ${
+                                                dishes.length > 1
+                                                    ? ""
+                                                    : "justify-center"
+                                            }`}
                                             style={{
                                                 scrollbarWidth:
                                                     "none" /* Firefox */,
@@ -201,47 +212,86 @@ export default function Chat({
                                             {dishes.map((dish, i) => (
                                                 <div
                                                     key={i}
-                                                    className={`min-w-[250px] max-w-full flex-shrink-0 p-3 border rounded-lg snap-start transition-colors duration-300 ease-in-out ${
+                                                    className={`min-w-[300px] max-w-full flex-shrink-0 p-3 border rounded-lg snap-start transition-colors duration-300 ease-in-out flex flex-col ${
                                                         i === currentSlide
                                                             ? "bg-gray-200/80 dark:bg-gray-700/80"
                                                             : "bg-white/80 dark:bg-gray-900/80 hover:bg-gray-100 dark:hover:bg-gray-800"
                                                     }`}
                                                 >
-                                                    <div>
-                                                        <h3 className="text-lg font-semibold mb-2">
+                                                    {/* Content section */}
+                                                    <div className="space-y-3 flex-grow">
+                                                        <h3 className="text-lg font-semibold">
                                                             {dish.title}
                                                         </h3>
+                                                        {dish.imageUrl && (
+                                                            <div className="relative w-full h-[200px] rounded-lg overflow-hidden">
+                                                                <img
+                                                                    src={
+                                                                        dish.imageUrl
+                                                                    }
+                                                                    alt={
+                                                                        dish.title
+                                                                    }
+                                                                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                                                                    loading="lazy"
+                                                                />
+                                                            </div>
+                                                        )}
                                                         <p className="whitespace-pre-wrap text-sm">
                                                             {dish.description}
                                                         </p>
+                                                    </div>
+
+                                                    {/* Button section - fixed at bottom */}
+                                                    <div className="mt-auto pt-6">
+                                                        <Button
+                                                            onClick={() => {
+                                                                setSelectedDish(
+                                                                    dish.title
+                                                                );
+                                                                setShowImageModal(
+                                                                    true
+                                                                );
+                                                            }}
+                                                            className="w-full transition-colors duration-300 py-6"
+                                                            size="sm"
+                                                        >
+                                                            View Image
+                                                        </Button>
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
 
-                                        {/* Navigation buttons */}
-                                        <div className="flex items-center justify-between mt-2">
-                                            <span className="text-sm text-gray-500 dark:text-gray-400">
-                                                {currentSlide + 1} of{" "}
-                                                {dishes.length}
-                                            </span>
-                                            <div className="flex items-center gap-2">
-                                                <Button
-                                                    onClick={handlePrevSlide}
-                                                    className="p-2 rounded-full bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600"
-                                                    size="icon"
-                                                >
-                                                    <ChevronLeft className="h-5 w-5" />
-                                                </Button>
-                                                <Button
-                                                    onClick={handleNextSlide}
-                                                    className="p-2 rounded-full bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600"
-                                                    size="icon"
-                                                >
-                                                    <ChevronRight className="h-5 w-5" />
-                                                </Button>
+                                        {/* Navigation buttons - only show for multiple dishes */}
+                                        {dishes.length > 1 && (
+                                            <div className="flex items-center justify-between mt-2">
+                                                <span className="text-sm text-gray-500 dark:text-gray-400">
+                                                    {currentSlide + 1} of{" "}
+                                                    {dishes.length}
+                                                </span>
+                                                <div className="flex items-center gap-2">
+                                                    <Button
+                                                        onClick={
+                                                            handlePrevSlide
+                                                        }
+                                                        className="p-2 rounded-full bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600"
+                                                        size="icon"
+                                                    >
+                                                        <ChevronLeft className="h-5 w-5" />
+                                                    </Button>
+                                                    <Button
+                                                        onClick={
+                                                            handleNextSlide
+                                                        }
+                                                        className="p-2 rounded-full bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600"
+                                                        size="icon"
+                                                    >
+                                                        <ChevronRight className="h-5 w-5" />
+                                                    </Button>
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
                                     </div>
                                 );
                             })()
@@ -285,6 +335,33 @@ export default function Chat({
                 </div>
             )}
             <div ref={messagesEndRef} />
+            {showImageModal && selectedDish && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-4xl h-[80vh] flex flex-col relative">
+                        <div className="p-4 border-b">
+                            <h3 className="text-lg font-semibold">
+                                {selectedDish} Images
+                            </h3>
+                        </div>
+                        <div className="flex-1 p-3">
+                            <iframe
+                                src={`https://www.google.com/search?igu=1&q=${encodeURIComponent(
+                                    selectedDish
+                                )}&tbm=isch`}
+                                className="w-full h-full rounded-lg"
+                                title="Google Images"
+                            />
+                        </div>
+                        <Button
+                            onClick={() => setShowImageModal(false)}
+                            className="absolute bottom-6 right-6 rounded-full w-12 h-12 bg-black hover:bg-black/90 text-white shadow-lg transition-all duration-300 hover:scale-110"
+                            size="icon"
+                        >
+                            <X className="h-6 w-6" />
+                        </Button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

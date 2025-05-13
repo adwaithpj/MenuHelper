@@ -327,7 +327,16 @@ export default function Home() {
             return;
         }
 
-        // If confirmed, keep the OCR results visible and add processing message
+        // If confirmed, just remove the confirmation requirement
+        setMessages((prev) => {
+            const newMessages = [...prev];
+            newMessages[index] = {
+                ...newMessages[index],
+                requiresConfirmation: false,
+            };
+            return newMessages;
+        });
+
         setProcessingImage(true);
         try {
             if (ocrResults?.text) {
@@ -364,20 +373,9 @@ export default function Home() {
                 }
 
                 if (menuItems.length > 0) {
-                    // Update the system message to show it's confirmed and add the menu items
-                    setMessages((prev) => {
-                        const newMessages = [...prev];
-                        // Update the confirmation message
-                        newMessages[index] = {
-                            ...newMessages[index],
-                            type: "system",
-                            requiresConfirmation: false,
-                            content: `✅ Confirmed menu items:\n${ocrResults.text
-                                .map((item) => `• ${item}`)
-                                .join("\n")}`,
-                        };
-                        // Add the detailed menu items
-                        newMessages.push({
+                    setMessages((prev) => [
+                        ...prev,
+                        {
                             type: "ai",
                             content: `😋🧑‍🍳 Here are the detailed descriptions of your menu items:\n\n${menuItems
                                 .map(
@@ -386,9 +384,8 @@ export default function Home() {
                                 )
                                 .join("\n")}`,
                             timestamp: new Date(),
-                        });
-                        return newMessages;
-                    });
+                        },
+                    ]);
                 }
             }
         } catch (error) {
