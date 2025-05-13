@@ -316,30 +316,21 @@ export default function Home() {
     };
 
     const handleConfirmation = async (index, isConfirmed) => {
-        setMessages((prev) => {
-            const newMessages = [...prev];
-            const message = newMessages[index];
-
-            if (isConfirmed) {
-                // Replace the system message with the confirmed text
-                newMessages[index] = {
-                    ...message,
-                    type: "ai",
-                    content: `Great! I'll analyze these menu items for you.`,
-                    requiresConfirmation: false,
-                };
-            } else {
-                // Remove the system message and OCR results
+        if (!isConfirmed) {
+            // If not confirmed, remove the system message and OCR results
+            setMessages((prev) => {
+                const newMessages = [...prev];
                 newMessages.splice(index, 1);
                 setOcrResults(null);
-            }
+                return newMessages;
+            });
+            return;
+        }
 
-            return newMessages;
-        });
-
-        if (isConfirmed && ocrResults?.text) {
-            setProcessingImage(true);
-            try {
+        // If confirmed, keep the OCR results visible and add processing message
+        setProcessingImage(true);
+        try {
+            if (ocrResults?.text) {
                 // Convert array to comma-separated string
                 const menuItemsString = ocrResults.text.join(", ");
 
@@ -373,34 +364,46 @@ export default function Home() {
                 }
 
                 if (menuItems.length > 0) {
-                    setMessages((prev) => [
-                        ...prev,
-                        {
+                    // Update the system message to show it's confirmed and add the menu items
+                    setMessages((prev) => {
+                        const newMessages = [...prev];
+                        // Update the confirmation message
+                        newMessages[index] = {
+                            ...newMessages[index],
+                            type: "system",
+                            requiresConfirmation: false,
+                            content: `✅ Confirmed menu items:\n${ocrResults.text
+                                .map((item) => `• ${item}`)
+                                .join("\n")}`,
+                        };
+                        // Add the detailed menu items
+                        newMessages.push({
                             type: "ai",
-                            content: `😋🧑‍🍳 These items look yummy":\n\n${menuItems
+                            content: `😋🧑‍🍳 Here are the detailed descriptions of your menu items:\n\n${menuItems
                                 .map(
                                     (item) =>
                                         `🍽️ ${item.dishName}\n\n${item.description}\n`
                                 )
                                 .join("\n")}`,
                             timestamp: new Date(),
-                        },
-                    ]);
+                        });
+                        return newMessages;
+                    });
                 }
-            } catch (error) {
-                console.error("Error processing menu items:", error);
-                setMessages((prev) => [
-                    ...prev,
-                    {
-                        type: "ai",
-                        content: `I'm sorry 🥺, something went wrong while processing the menu items. Please try again.`,
-                        timestamp: new Date(),
-                    },
-                ]);
-            } finally {
-                setProcessingImage(false);
-                setOcrResults(null);
             }
+        } catch (error) {
+            console.error("Error processing menu items:", error);
+            setMessages((prev) => [
+                ...prev,
+                {
+                    type: "ai",
+                    content: `I'm sorry 🥺, something went wrong while processing the menu items. Please try again.`,
+                    timestamp: new Date(),
+                },
+            ]);
+        } finally {
+            setProcessingImage(false);
+            setOcrResults(null);
         }
     };
 
